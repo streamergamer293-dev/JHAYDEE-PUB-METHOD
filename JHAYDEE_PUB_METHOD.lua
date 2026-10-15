@@ -6293,4 +6293,236 @@ do
     _G.JH_HZ_SetPanelsVisible = setPanelsVisible
 end
 
+
+-- JH/HZ JOB ID COPIER
+do
+    local host = (gethui and gethui()) or game:GetService("CoreGui")
+    local old = host:FindFirstChild("JH_HZ_JobIdGui")
+    if old then pcall(function() old:Destroy() end) end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "JH_HZ_JobIdGui"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 2147483646
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = host
+
+    local frame = Instance.new("Frame")
+    frame.Name = "JobIdPanel"
+    frame.AnchorPoint = Vector2.new(0.5, 1)
+    frame.Position = UDim2.new(0.5, 0, 1, -120)
+    frame.Size = UDim2.fromOffset(340, 118)
+    frame.BackgroundColor3 = Color3.fromRGB(14, 8, 22)
+    frame.BackgroundTransparency = 0.02
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 180
+    frame.Parent = gui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(255, 140, 40)
+    stroke.Thickness = 1.4
+    stroke.Transparency = 0.25
+
+    -- title bar
+    local titleBar = Instance.new("Frame", frame)
+    titleBar.Size = UDim2.new(1, 0, 0, 28)
+    titleBar.BackgroundColor3 = Color3.fromRGB(22, 12, 32)
+    titleBar.BorderSizePixel = 0
+    titleBar.ZIndex = 181
+    Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 12)
+    -- cover bottom corners of title so only top is rounded
+    local titleCover = Instance.new("Frame", titleBar)
+    titleCover.Size = UDim2.new(1, 0, 0, 10)
+    titleCover.Position = UDim2.new(0, 0, 1, -10)
+    titleCover.BackgroundColor3 = Color3.fromRGB(22, 12, 32)
+    titleCover.BorderSizePixel = 0
+    titleCover.ZIndex = 181
+
+    -- traffic dots
+    local function dot(x, color)
+        local d = Instance.new("Frame", titleBar)
+        d.Size = UDim2.fromOffset(10, 10)
+        d.Position = UDim2.fromOffset(x, 9)
+        d.BackgroundColor3 = color
+        d.BorderSizePixel = 0
+        d.ZIndex = 182
+        Instance.new("UICorner", d).CornerRadius = UDim.new(1, 0)
+    end
+    dot(10, Color3.fromRGB(255, 80, 80))
+    dot(26, Color3.fromRGB(255, 180, 40))
+    dot(42, Color3.fromRGB(80, 200, 90))
+
+    local title = Instance.new("TextLabel", titleBar)
+    title.Size = UDim2.new(1, -70, 1, 0)
+    title.Position = UDim2.fromOffset(58, 0)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 13
+    title.TextColor3 = Color3.fromRGB(255, 245, 220)
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Text = "JH/HZ JOB ID COPIER"
+    title.ZIndex = 182
+
+    local closeBtn = Instance.new("TextButton", titleBar)
+    closeBtn.Size = UDim2.fromOffset(22, 22)
+    closeBtn.Position = UDim2.new(1, -26, 0.5, -11)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(36, 18, 48)
+    closeBtn.Text = "–"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 16
+    closeBtn.TextColor3 = Color3.fromRGB(255, 160, 40)
+    closeBtn.AutoButtonColor = false
+    closeBtn.ZIndex = 183
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+
+    local minimized = false
+    local fullH = 118
+    closeBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            frame.Size = UDim2.fromOffset(340, 28)
+            closeBtn.Text = "+"
+        else
+            frame.Size = UDim2.fromOffset(340, fullH)
+            closeBtn.Text = "–"
+        end
+    end)
+
+    -- job id box
+    local idBox = Instance.new("TextBox", frame)
+    idBox.Size = UDim2.new(1, -20, 0, 32)
+    idBox.Position = UDim2.fromOffset(10, 38)
+    idBox.BackgroundColor3 = Color3.fromRGB(28, 14, 42)
+    idBox.BorderSizePixel = 0
+    idBox.Font = Enum.Font.GothamMedium
+    idBox.TextSize = 12
+    idBox.TextColor3 = Color3.fromRGB(255, 220, 180)
+    idBox.TextXAlignment = Enum.TextXAlignment.Center
+    idBox.ClearTextOnFocus = false
+    idBox.TextEditable = false
+    idBox.ZIndex = 181
+    idBox.Text = tostring(game.JobId or "")
+    Instance.new("UICorner", idBox).CornerRadius = UDim.new(0, 8)
+    local idStroke = Instance.new("UIStroke", idBox)
+    idStroke.Color = Color3.fromRGB(140, 60, 180)
+    idStroke.Thickness = 1
+    idStroke.Transparency = 0.35
+
+    -- copy button
+    local copyBtn = Instance.new("TextButton", frame)
+    copyBtn.Size = UDim2.new(1, -20, 0, 34)
+    copyBtn.Position = UDim2.fromOffset(10, 76)
+    copyBtn.BackgroundColor3 = Color3.fromRGB(36, 16, 52)
+    copyBtn.BorderSizePixel = 0
+    copyBtn.AutoButtonColor = false
+    copyBtn.Font = Enum.Font.GothamBlack
+    copyBtn.TextSize = 13
+    copyBtn.TextColor3 = Color3.fromRGB(255, 160, 40)
+    copyBtn.Text = "COPY JOB ID"
+    copyBtn.ZIndex = 181
+    Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 8)
+    local copyStroke = Instance.new("UIStroke", copyBtn)
+    copyStroke.Color = Color3.fromRGB(255, 140, 40)
+    copyStroke.Thickness = 1.2
+    copyStroke.Transparency = 0.3
+
+    local function refreshId()
+        idBox.Text = tostring(game.JobId or "")
+    end
+
+    local function copyJobId()
+        local jid = tostring(game.JobId or "")
+        if jid == "" then
+            copyBtn.Text = "NO JOB ID"
+            task.delay(1.2, function()
+                if copyBtn and copyBtn.Parent then copyBtn.Text = "COPY JOB ID" end
+            end)
+            return
+        end
+        local ok = false
+        if typeof(setclipboard) == "function" then
+            ok = pcall(setclipboard, jid)
+        elseif typeof(toclipboard) == "function" then
+            ok = pcall(toclipboard, jid)
+        elseif typeof(set_clipboard) == "function" then
+            ok = pcall(set_clipboard, jid)
+        end
+        if ok then
+            copyBtn.Text = "COPIED!"
+            copyBtn.TextColor3 = Color3.fromRGB(120, 255, 80)
+            copyStroke.Color = Color3.fromRGB(120, 255, 80)
+        else
+            -- fallback: select text so user can long-press / Ctrl+C
+            idBox.TextEditable = true
+            idBox:CaptureFocus()
+            idBox.CursorPosition = #jid + 1
+            idBox.SelectionStart = 1
+            copyBtn.Text = "SELECT & COPY"
+            copyBtn.TextColor3 = Color3.fromRGB(255, 200, 80)
+            task.delay(2, function()
+                if idBox and idBox.Parent then
+                    idBox.TextEditable = false
+                    pcall(function() idBox:ReleaseFocus() end)
+                end
+            end)
+        end
+        task.delay(1.5, function()
+            if copyBtn and copyBtn.Parent then
+                copyBtn.Text = "COPY JOB ID"
+                copyBtn.TextColor3 = Color3.fromRGB(255, 160, 40)
+                copyStroke.Color = Color3.fromRGB(255, 140, 40)
+            end
+        end)
+    end
+
+    copyBtn.MouseButton1Click:Connect(copyJobId)
+    copyBtn.MouseEnter:Connect(function()
+        copyBtn.BackgroundColor3 = Color3.fromRGB(48, 22, 68)
+    end)
+    copyBtn.MouseLeave:Connect(function()
+        copyBtn.BackgroundColor3 = Color3.fromRGB(36, 16, 52)
+    end)
+
+    -- keep job id updated (in case of rare teleport mid-session)
+    task.spawn(function()
+        while gui and gui.Parent do
+            refreshId()
+            task.wait(5)
+        end
+    end)
+
+    -- drag support
+    local UIS = game:GetService("UserInputService")
+    local dragging, dragStart, startPos
+    titleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if not dragging then return end
+        if input.UserInputType ~= Enum.UserInputType.MouseMovement
+            and input.UserInputType ~= Enum.UserInputType.Touch then
+            return
+        end
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end)
+
+    _G.JH_HZ_CopyJobId = copyJobId
+    _G.JH_HZ_RefreshJobId = refreshId
+end
+
 print("JHAYDEE PUB METHOD | Halloween ready")
