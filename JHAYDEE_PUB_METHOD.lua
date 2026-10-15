@@ -6155,4 +6155,142 @@ task.spawn(function()
 end)
 
 
+
+-- JH/HZ Open/Close toggle for main panels
+do
+    local host = (gethui and gethui()) or game:GetService("CoreGui")
+    for _, name in ipairs({"JH_HZ_ToggleGui", "JHHZToggle"}) do
+        local old = host:FindFirstChild(name)
+        if old then pcall(function() old:Destroy() end) end
+    end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "JH_HZ_ToggleGui"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.DisplayOrder = 2147483647
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = host
+
+    local panelsOpen = true
+
+    local btn = Instance.new("TextButton")
+    btn.Name = "JHHZToggle"
+    btn.AnchorPoint = Vector2.new(1, 0)
+    btn.Position = UDim2.new(1, -14, 0, 72)
+    btn.Size = UDim2.fromOffset(56, 56)
+    btn.BackgroundColor3 = Color3.fromRGB(18, 10, 28)
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Text = "JH/HZ"
+    btn.Font = Enum.Font.GothamBlack
+    btn.TextSize = 13
+    btn.TextColor3 = Color3.fromRGB(255, 160, 40)
+    btn.ZIndex = 200
+    btn.Parent = gui
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 14)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(255, 140, 40)
+    stroke.Thickness = 1.6
+    stroke.Transparency = 0.15
+    local glow = Instance.new("UIStroke", btn)
+    glow.Color = Color3.fromRGB(255, 100, 0)
+    glow.Thickness = 4
+    glow.Transparency = 0.78
+    glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+    local sub = Instance.new("TextLabel", btn)
+    sub.Name = "StateLabel"
+    sub.AnchorPoint = Vector2.new(0.5, 1)
+    sub.Position = UDim2.new(0.5, 0, 1, -4)
+    sub.Size = UDim2.new(1, -4, 0, 12)
+    sub.BackgroundTransparency = 1
+    sub.Font = Enum.Font.GothamBold
+    sub.TextSize = 9
+    sub.TextColor3 = Color3.fromRGB(180, 140, 100)
+    sub.Text = "OPEN"
+    sub.ZIndex = 201
+
+    -- nudge main label up so JH/HZ sits above OPEN/CLOSE
+    btn.TextYAlignment = Enum.TextYAlignment.Top
+    local pad = Instance.new("UIPadding", btn)
+    pad.PaddingTop = UDim.new(0, 10)
+
+    local function setPanelsVisible(vis)
+        panelsOpen = vis and true or false
+        local steal = P.AutoStealFrame
+        local controls = P.TargetControlsFrame
+        if steal then
+            steal.Visible = panelsOpen
+        end
+        if controls then
+            controls.Visible = panelsOpen
+        end
+        -- also hide parent ScreenGuis content if needed (frames themselves)
+        if panelsOpen then
+            btn.BackgroundColor3 = Color3.fromRGB(18, 10, 28)
+            btn.TextColor3 = Color3.fromRGB(255, 160, 40)
+            stroke.Color = Color3.fromRGB(255, 140, 40)
+            stroke.Transparency = 0.15
+            sub.Text = "OPEN"
+            sub.TextColor3 = Color3.fromRGB(120, 255, 80)
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(28, 14, 18)
+            btn.TextColor3 = Color3.fromRGB(180, 100, 60)
+            stroke.Color = Color3.fromRGB(120, 60, 40)
+            stroke.Transparency = 0.4
+            sub.Text = "CLOSE"
+            sub.TextColor3 = Color3.fromRGB(200, 80, 60)
+        end
+    end
+
+    local function togglePanels()
+        setPanelsVisible(not panelsOpen)
+    end
+
+    btn.MouseButton1Click:Connect(togglePanels)
+
+    -- hover feedback
+    btn.MouseEnter:Connect(function()
+        if panelsOpen then
+            btn.BackgroundColor3 = Color3.fromRGB(36, 18, 48)
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(42, 18, 28)
+        end
+    end)
+    btn.MouseLeave:Connect(function()
+        if panelsOpen then
+            btn.BackgroundColor3 = Color3.fromRGB(18, 10, 28)
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(28, 14, 18)
+        end
+    end)
+
+    -- MenuKey also toggles panels
+    local UIS = game:GetService("UserInputService")
+    UIS.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+        local keyName = tostring(i.MenuKey or "LeftControl")
+        if input.KeyCode.Name == keyName then
+            togglePanels()
+        end
+    end)
+
+    -- ensure panels start open once frames exist
+    task.spawn(function()
+        local deadline = os.clock() + 20
+        while os.clock() < deadline do
+            if P.AutoStealFrame and P.TargetControlsFrame then
+                setPanelsVisible(true)
+                break
+            end
+            task.wait(0.25)
+        end
+    end)
+
+    _G.JH_HZ_TogglePanels = togglePanels
+    _G.JH_HZ_SetPanelsVisible = setPanelsVisible
+end
+
 print("JHAYDEE PUB METHOD | Halloween ready")
