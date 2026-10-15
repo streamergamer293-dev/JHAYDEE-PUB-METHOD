@@ -1218,15 +1218,18 @@ do
         local function cam() return workspace.CurrentCamera end
         if not cam() then return end
 
-        local MARK = Color3.fromRGB(255, 120, 20)
-        local WHITE = Color3.fromRGB(255, 255, 255)
+        -- Halloween spooky tile markers (standable + numbered badges)
+        local MARK = Color3.fromRGB(255, 90, 20)          -- pumpkin orange fill
+        local MARK_EDGE = Color3.fromRGB(255, 40, 20)     -- blood-orange edge
+        local WHITE = Color3.fromRGB(255, 250, 240)
+        local BADGE_BG = Color3.fromRGB(12, 6, 10)
         local SHOW_NUMBERS = true
-        local COLLIDE = true
-        local FILL_T, INNER_T, THICK = 0.55, 0.42, 0.05
-        local PULSE_SPEED, PULSE_AMOUNT = 2, 0.12
-        local OUTER = Vector3.new(6, 0.25, 6)
-        local INNER_SZ = Vector3.new(4, 0.25, 4)
-        local INNER_UP = 0.25
+        local COLLIDE = true   -- users of this script can stand on the tiles
+        local FILL_T, INNER_T, THICK = 0.50, 0.35, 0.06
+        local PULSE_SPEED, PULSE_AMOUNT = 2.2, 0.14
+        local OUTER = Vector3.new(6, 0.28, 6)
+        local INNER_SZ = Vector3.new(4.2, 0.28, 4.2)
+        local INNER_UP = 0.28
 
         local TEMPLATE = {
             { 18.500,  1.531, -14.476,  90}, { 18.500,  1.531,  -6.976,  90}, { 18.500,  1.531,   0.524,  90},
@@ -1297,12 +1300,14 @@ do
             a.CastShadow = false
             a.Massless = true
             a.Transparency = 1
-            a.Size = collidable and OUTER or Vector3.new(0.1, 0.1, 0.1)
+            a.Size = collidable and Vector3.new(5.5, 0.7, 5.5) or Vector3.new(0.1, 0.1, 0.1)
             a.CFrame = worldCF
-            a.Parent = c
+            -- Standable pads go in Workspace so physics/collision always works
             if collidable then
+                a.Parent = workspace
                 collideParts[#collideParts + 1] = a
             else
+                a.Parent = c
                 labelAnchors[#labelAnchors + 1] = a
             end
             return a
@@ -1310,27 +1315,36 @@ do
 
         local function labelFor(plot, adornee, slotNum, color)
             if not SHOW_NUMBERS then return end
+            -- Screenshot-style number badge: dark pill + bold white # + glowing orange outline
             local bg = Instance.new("BillboardGui")
             bg.Adornee = adornee
-            bg.Size = UDim2.new(2.2, 20, 1.35, 12)
-            bg.StudsOffset = Vector3.new(0, 3.2, 0)
+            bg.Size = UDim2.new(0, 52, 0, 40)
+            bg.StudsOffset = Vector3.new(0, 3.6, 0)
             bg.AlwaysOnTop = true
             bg.LightInfluence = 0
-            bg.MaxDistance = 400
+            bg.MaxDistance = 500
             bg.Enabled = false
 
             local panel = Instance.new("Frame", bg)
             panel.Size = UDim2.fromScale(1, 1)
-            panel.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
-            panel.BackgroundTransparency = 0.55
+            panel.BackgroundColor3 = BADGE_BG
+            panel.BackgroundTransparency = 0.08
             panel.BorderSizePixel = 0
-            Instance.new("UICorner", panel).CornerRadius = UDim.new(0.3, 0)
+            Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 10)
 
+            -- outer spooky glow
             local glow = Instance.new("UIStroke", panel)
-            glow.Color = color
-            glow.Thickness = 4
-            glow.Transparency = 0.7
+            glow.Color = MARK_EDGE
+            glow.Thickness = 3.5
+            glow.Transparency = 0.15
             glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+            -- inner orange ring
+            local ring = Instance.new("UIStroke", panel)
+            ring.Color = color or MARK
+            ring.Thickness = 1.5
+            ring.Transparency = 0.35
+            ring.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
             local num = Instance.new("TextLabel", panel)
             num.Size = UDim2.fromScale(1, 1)
@@ -1339,20 +1353,23 @@ do
             num.Font = Enum.Font.GothamBlack
             num.TextScaled = true
             num.TextColor3 = WHITE
+            num.TextStrokeColor3 = Color3.fromRGB(80, 10, 0)
+            num.TextStrokeTransparency = 0.35
 
             local pad = Instance.new("UIPadding", num)
-            pad.PaddingLeft = UDim.new(0.1, 0)
-            pad.PaddingRight = UDim.new(0.1, 0)
-            pad.PaddingTop = UDim.new(0.08, 0)
-            pad.PaddingBottom = UDim.new(0.08, 0)
+            pad.PaddingLeft = UDim.new(0, 6)
+            pad.PaddingRight = UDim.new(0, 6)
+            pad.PaddingTop = UDim.new(0, 4)
+            pad.PaddingBottom = UDim.new(0, 4)
 
             local cons = Instance.new("UITextSizeConstraint", num)
-            cons.MaxTextSize = 500
-            cons.MinTextSize = 6
+            cons.MaxTextSize = 28
+            cons.MinTextSize = 10
 
             local ns = Instance.new("UIStroke", num)
-            ns.Color = color
-            ns.Thickness = 2
+            ns.Color = MARK_EDGE
+            ns.Thickness = 1.8
+            ns.Transparency = 0.25
             ns.LineJoinMode = Enum.LineJoinMode.Round
 
             keep(bg)
@@ -1360,22 +1377,95 @@ do
             table.insert(labelsByPlot[plot], bg)
         end
 
+        local function getPodiumWorldCF(pod)
+            -- Prefer real Spawn / Base parts so markers sit on the true tile
+            local base = pod:FindFirstChild("Base")
+            local spawn = base and base:FindFirstChild("Spawn")
+            if spawn and spawn:IsA("BasePart") then
+                return spawn.CFrame
+            end
+            if spawn and spawn:IsA("Model") then
+                local ok, cf = pcall(function() return spawn:GetPivot() end)
+                if ok and cf then return cf end
+            end
+            if base and base:IsA("BasePart") then
+                return base.CFrame
+            end
+            if base and base:IsA("Model") then
+                local ok, cf = pcall(function() return base:GetPivot() end)
+                if ok and cf then return cf end
+            end
+            local part = pod:FindFirstChildWhichIsA("BasePart", true)
+            if part then
+                return part.CFrame
+            end
+            local ok, cf = pcall(function() return pod:GetPivot() end)
+            if ok and cf then return cf end
+            return nil
+        end
+
+        local function collectPodiums(plot)
+            local list = {}
+            local podsFolder = plot:FindFirstChild("AnimalPodiums")
+            if not podsFolder then return list end
+            for _, pod in ipairs(podsFolder:GetChildren()) do
+                local cf = getPodiumWorldCF(pod)
+                if cf then
+                    local num = tonumber(pod.Name)
+                    list[#list + 1] = {
+                        pod = pod,
+                        cf = cf,
+                        num = num,
+                        name = pod.Name,
+                    }
+                end
+            end
+            table.sort(list, function(a, b)
+                if a.num and b.num then return a.num < b.num end
+                if a.num then return true end
+                if b.num then return false end
+                return tostring(a.name) < tostring(b.name)
+            end)
+            return list
+        end
+
+        local function placeMarker(plot, worldCF, slotNum)
+            -- Lift slightly so the pad sits on top of the real tile surface
+            local padCF = worldCF * CFrame.new(0, 0.15, 0)
+            local a = anchorAt(padCF, false)
+            if not a then return end
+            box(a, CFrame.new(), OUTER, MARK, FILL_T, true)
+            box(a, CFrame.new(0, INNER_UP, 0), INNER_SZ, MARK, INNER_T, true)
+            edges(a, CFrame.new(), OUTER, MARK_EDGE)
+            if COLLIDE then
+                -- Solid standable pad on the real tile (Workspace, CanCollide)
+                local stand = anchorAt(padCF, true)
+                if stand then
+                    stand.CanCollide = true
+                end
+            end
+            labelFor(plot, a, slotNum, MARK)
+        end
+
         local function build()
             if not alive then return end
             clear()
             for _, plot in ipairs(Plots:GetChildren()) do
-                local root = plot:FindFirstChild("MainRoot")
-                if root then
-                    for idx = 1, #TEMPLATE do
-                        local e = TEMPLATE[idx]
-                        local worldCF = root.CFrame * (CFrame.new(e[1], e[2], e[3]) * CFrame.Angles(0, math.rad(e[4]), 0))
-                        local a = anchorAt(worldCF, false)
-                        if a then
-                            box(a, CFrame.new(), OUTER, MARK, FILL_T, true)
-                            box(a, CFrame.new(0, INNER_UP, 0), INNER_SZ, MARK, INNER_T, true)
-                            edges(a, CFrame.new(), OUTER, MARK)
-                            if COLLIDE then anchorAt(worldCF, true) end
-                            labelFor(plot, a, idx, MARK)
+                local dynamic = collectPodiums(plot)
+                if #dynamic > 0 then
+                    -- Accurate: one marker per real AnimalPodiums slot
+                    for i, entry in ipairs(dynamic) do
+                        local slotNum = entry.num or i
+                        placeMarker(plot, entry.cf, slotNum)
+                    end
+                else
+                    -- Fallback to TEMPLATE offsets if pods not loaded yet
+                    local root = plot:FindFirstChild("MainRoot")
+                    if root then
+                        for idx = 1, #TEMPLATE do
+                            local e = TEMPLATE[idx]
+                            local worldCF = root.CFrame * (CFrame.new(e[1], e[2], e[3]) * CFrame.Angles(0, math.rad(e[4]), 0))
+                            placeMarker(plot, worldCF, idx)
                         end
                     end
                 end
@@ -1426,10 +1516,23 @@ do
         updateVisibility()
 
         local function watch(plot)
-            if not plot:FindFirstChild("MainRoot") then
-                local root = plot:WaitForChild("MainRoot", 30)
-                if root and alive then rebuild() end
-            end
+            task.spawn(function()
+                if not plot:FindFirstChild("MainRoot") then
+                    plot:WaitForChild("MainRoot", 30)
+                end
+                local pods = plot:FindFirstChild("AnimalPodiums") or plot:WaitForChild("AnimalPodiums", 30)
+                if pods and alive then
+                    table.insert(conns, pods.ChildAdded:Connect(function()
+                        if alive then rebuild() end
+                    end))
+                    table.insert(conns, pods.ChildRemoved:Connect(function()
+                        if alive then rebuild() end
+                    end))
+                    rebuild()
+                elseif alive then
+                    rebuild()
+                end
+            end)
         end
         for _, plot in ipairs(Plots:GetChildren()) do task.spawn(watch, plot) end
 
