@@ -1106,24 +1106,26 @@ do
         local bb = Instance.new("BillboardGui")
         bb.Name = "NextBaseBillboard"
         bb.Adornee = anchor
-        bb.Size = UDim2.fromScale(32, 13)
-        bb.StudsOffset = Vector3.new(0, 10, 0)
+        bb.Size = UDim2.fromScale(34, 14)
+        bb.StudsOffset = Vector3.new(0, 11, 0)
         bb.MaxDistance = math.huge
         bb.AlwaysOnTop = true
         bb.LightInfluence = 0
         bb.Enabled = false
         bb.Parent = anchor
+        -- Halloween spooky Next Base pointer
         local top = Instance.new("TextLabel", bb)
         top.BackgroundTransparency = 1
         top.AnchorPoint = Vector2.new(0.5, 0.5)
-        top.Position = UDim2.fromScale(0.5, 0.30)
-        top.Size = UDim2.fromScale(0.95, 0.50)
+        top.Position = UDim2.fromScale(0.5, 0.28)
+        top.Size = UDim2.fromScale(0.95, 0.48)
         top.Font = Enum.Font.GothamBlack
-        top.Text = ARROW .. "  NEXT  " .. ARROW
+        top.Text = ARROW .. "  NEXT BASE  " .. ARROW
         top.TextScaled = true
-        top.TextColor3 = Color3.fromRGB(255, 60, 60)
-        top.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        top.TextColor3 = Color3.fromRGB(255, 120, 20)           -- pumpkin orange
+        top.TextStrokeColor3 = Color3.fromRGB(40, 8, 0)         -- deep burnt outline
         top.TextStrokeTransparency = 0
+
         local bottom = Instance.new("TextLabel", bb)
         bottom.BackgroundTransparency = 1
         bottom.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1132,9 +1134,9 @@ do
         bottom.Font = Enum.Font.GothamBlack
         bottom.Text = "EMPTY BASE"
         bottom.TextScaled = true
-        bottom.TextColor3 = Color3.fromRGB(255, 255, 255)
-        bottom.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-        bottom.TextStrokeTransparency = 0
+        bottom.TextColor3 = Color3.fromRGB(255, 245, 220)       -- bone / parchment
+        bottom.TextStrokeColor3 = Color3.fromRGB(80, 20, 0)     -- dark orange stroke
+        bottom.TextStrokeTransparency = 0.15
         local function isEmpty(label)
             return (label.Text:gsub("^%s+", ""):gsub("%s+$", "")) == EMPTY_TEXT
         end
@@ -1231,6 +1233,7 @@ do
         local INNER_SZ = Vector3.new(4.2, 0.28, 4.2)
         local INNER_UP = 0.28
 
+        -- Podium slots #1 through #28 (ground 1-10, mid 11-18, top 19-28)
         local TEMPLATE = {
             { 18.500,  1.531, -14.476,  90}, { 18.500,  1.531,  -6.976,  90}, { 18.500,  1.531,   0.524,  90},
             { 18.500,  1.531,   8.024,  90}, { 18.500,  1.531,  15.524,  90},
